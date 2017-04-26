@@ -4,17 +4,23 @@ require 'pry'
 
 
 
-def get_character_movies_from_api(character)
+def character_hash
+  JSON.parse(RestClient.get('http://www.swapi.co/api/people/'))
+end
 
-  all_characters = RestClient.get('http://www.swapi.co/api/people/')
-  character_hash = JSON.parse(all_characters)
-  while character_hash["next"] != "null"
-    character_hash["results"].each do |character_data|
+def next_page
+  JSON.parse(RestClient.get(character_hash["next"]))
+end
+
+def get_character_movies_from_api(character)
+  all_characters = character_hash
+  while all_characters["next"] != "null"
+    all_characters["results"].each do |character_data|
       if character_data["name"].downcase == character
         return character_data["films"]
       end
     end
-    character_hash = JSON.parse(RestClient.get(character_hash["next"]))
+    all_characters = next_page
   end
 end
 
@@ -33,7 +39,7 @@ end
 
 def parse_character_movies(films_hash)
   films_hash.each_with_index do |film_url, index|
-    puts "#{index + 1} #{JSON.parse(RestClient.get(film_url))["title"]}"
+    puts "#{index + 1}. #{JSON.parse(RestClient.get(film_url))["title"]}"
   end
 end
 
