@@ -12,6 +12,14 @@ def next_page
   JSON.parse(RestClient.get(character_hash["next"]))
 end
 
+def all_movie_hash
+  JSON.parse(RestClient.get('http://www.swapi.co/api/films/'))
+end
+
+def next_movie_page
+  JSON.parse(RestClient.get(all_movie_hash["next"]))
+end
+
 def get_character_movies_from_api(character)
   all_characters = character_hash
   while all_characters["next"] != "null"
@@ -21,6 +29,15 @@ def get_character_movies_from_api(character)
       end
     end
     all_characters = next_page
+  end
+end
+
+def get_movie_from_api(character, category)
+  all_movies = all_movie_hash
+    all_movies["results"].each do |movie_data|
+    if movie_data["title"].downcase == character
+      return movie_data[category]
+    end
   end
 end
 
@@ -43,11 +60,25 @@ def parse_character_movies(films_hash)
   end
 end
 
-def show_character_movies(character)
-  films_hash = get_character_movies_from_api(character)
-  parse_character_movies(films_hash)
+def show_character_movies(choice, character, category)
+  if choice == "character"
+    films_hash = get_character_movies_from_api(character)
+    parse_character_movies(films_hash)
+  elsif choice == "movie"
+    movie_hash = get_movie_from_api(character, category)
+    parse_movie_info(movie_hash)
+  end
 end
 
+def parse_movie_info(movie_hash)
+  if movie_hash.class == Array
+    movie_hash.each_with_index do |film_url, index|
+      puts "#{index + 1}. #{JSON.parse(RestClient.get(film_url))["name"]}"
+    end
+  else
+    puts movie_hash
+  end
+end
 ## BONUS
 
 # that `get_character_movies_from_api` method is probably pretty long. Does it do more than one job?
